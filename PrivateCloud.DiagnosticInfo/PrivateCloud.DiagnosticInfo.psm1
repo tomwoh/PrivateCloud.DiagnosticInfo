@@ -2204,7 +2204,7 @@ function Get-SddcDiagnosticInfo
             {
                 $null = Get-ClusterLog -Node $using:ClusterNodes.Name -Destination $using:Path -UseLocalTime -Netft
             }
-            if ($S2DEnabled) {
+            if ($using:S2DEnabled) {
                 $null = Get-ClusterLog -Node $using:ClusterNodes.Name -Destination $using:Path -Health -UseLocalTime
             }
         }
