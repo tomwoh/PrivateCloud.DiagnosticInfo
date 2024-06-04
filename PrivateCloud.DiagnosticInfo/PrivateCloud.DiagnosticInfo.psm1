@@ -1962,23 +1962,8 @@ function Get-SddcDiagnosticInfo
                     Export-Clixml ($using:Path + "GetClusterQuorum.XML")
                 }
                 catch { Show-Warning("Unable to get Cluster Quorum.  `nError="+$_.Exception.Message) }
-            }
-
-            $JobStatic += start-job -Name CauDebugTrace {
-                try {
-
-                    # SCDT returns a fileinfo object for the saved ZIP on the pipeline; discard (allow errors/warnings to flow as normal)
-
-                    if ((Get-Command Save-CauDebugTrace).Parameters.ContainsKey("FeatureUpdateLogs")) {
-                        $null = Save-CauDebugTrace -Cluster $using:AccessNode -FeatureUpdateLogs All -FilePath $using:Path
-                    }
-                    else {
-                        $null = Save-CauDebugTrace -Cluster $using:AccessNode -FilePath $using:Path
-                    }
-                }
-                catch { Show-Warning("Unable to get CAU debug trace.  `nError="+$_.Exception.Message) }
-            }
-
+            } 
+            
         } else {
             Show-Update "... Skip gather of cluster configuration since cluster is not available"
         }
@@ -2196,7 +2181,7 @@ function Get-SddcDiagnosticInfo
         }
 
         # Events, cmd, reports, et.al.
-        Show-Update "Start gather of system info, cluster/netft/health logs, reports and dump files ..."
+        Show-Update "Start gather of system info, cluster/netft/health/CAU logs, reports and dump files ..."
 
         $JobStatic += Start-Job -Name ClusterLogs {
             $null = Get-ClusterLog -Node $using:ClusterNodes.Name -Destination $using:Path -UseLocalTime
@@ -2207,6 +2192,17 @@ function Get-SddcDiagnosticInfo
             if ($using:S2DEnabled) {
                 $null = Get-ClusterLog -Node $using:ClusterNodes.Name -Destination $using:Path -Health -UseLocalTime
             }
+
+            try {
+                    # SCDT returns a fileinfo object for the saved ZIP on the pipeline; discard (allow errors/warnings to flow as normal)
+                    if ((Get-Command Save-CauDebugTrace).Parameters.ContainsKey("FeatureUpdateLogs")) {
+                        $null = Save-CauDebugTrace -Cluster $using:AccessNode -FeatureUpdateLogs All -FilePath $using:Path
+                    }
+                    else {
+                        $null = Save-CauDebugTrace -Cluster $using:AccessNode -FilePath $using:Path
+                    }
+                }
+                catch { Show-Warning("Unable to get CAU debug trace.  `nError="+$_.Exception.Message) }
         }
 
         $JobStatic += $ClusterNodes.Name |% {
